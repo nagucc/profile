@@ -7,4 +7,5 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
-export Greeting from './Greeting.js';
+export Profile from './Profile-mongo.js';
+export MongoProfile from './Profile-mongo.js';
