@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /*
-  eslint-disable padded-blocks, no-unused-expressions, no-underscore-dangle
+  eslint-disable padded-blocks, no-unused-expressions
  */
 
 import 'babel-polyfill';
