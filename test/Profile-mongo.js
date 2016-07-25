@@ -21,6 +21,10 @@ describe('Profile Data Access', () => {
     await dao.add(profile);
     expect(profile._id).to.be.ok;
   });
+  it('findOne 正确查询', async () => {
+    const doc = await dao.findOne({ userid: userid });
+    expect(doc).to.eql(profile);
+  });
   it('getByUserId 根据userid可获取数据', async () => {
     const result = await dao.getByUserId(userid);
     expect(result).to.eql(profile);

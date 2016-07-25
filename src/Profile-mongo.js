@@ -48,6 +48,17 @@ export default class Profle {
         }
       }));
   }
+  findOne(query) {
+    return new Promise((resolve, reject) =>
+      this.useProfiles(async col => {
+        try {
+          const doc = await col.findOne(query);
+          resolve(doc);
+        } catch (e) {
+          reject(e);
+        }
+      }));
+  }
   update(_id, profile = {}) {
     return new Promise((resolve, reject) =>
       this.useProfiles(async col => {

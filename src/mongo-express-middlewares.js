@@ -59,6 +59,26 @@ export default class MongoProfileMiddlewares {
       }
     };
   }
+
+  findOne(getQuery, success = (doc, req, res, next) => {
+    res.profile = doc;
+    next();
+  }, fail = (result, req, res) => {
+    res.send(result);
+  }) {
+    return async (req, res, next) => {
+      try {
+        const query = getQuery(req, res);
+        const doc = await this.dao.findOne(query);
+        success(doc, req, res, next);
+      } catch (e) {
+        fail({
+          ret: SERVER_FAILED,
+          msg: e,
+        }, req, res, next);
+      }
+    };
+  }
   update(getId, composeProfile) {
     return async (req, res, next) => {
       const _id = getId(req, res);

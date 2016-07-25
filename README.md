@@ -28,14 +28,18 @@ export const profileMiddlewares = new MongoProfileMiddlewares(mongoUrl, profileC
 - profileCollection 存储profile数据的集合的名称，默认为`profiles`
 
 ##### get(getId(req, res) [, success(profile, req, res, next), fail(result, req, res, next)] )
-返回一个用于根据id获取profile的async中间件。服务器出错时直接res.send({ret, msg})。
+返回一个用于根据id获取profile的async中间件。
 ```javascript
-const getProfile = profileMiddlewares.get(req => (new ObjectId(req.params.id)));
-router.get('/list/:pageIndex',
-  getProfile,
-  (req, res) => {
-
+const getProfile = profileMiddlewares.get(
+  req => (new ObjectId(req.params.id)),
+  (profile, req, res) => {
+    if (profile) {
+      res.send({ ret: 0, data: profile });
+    } else {
+      res.send({ ret: 404 });
+    }
   });
+router.get('/:id', getProfile);
 ```
 参数：
 - getId 必须的，一个函数，用于获取profile的Id。
@@ -52,6 +56,36 @@ router.get('/list/:pageIndex',
     res.send(result);
   }
   ```
+
+##### findOne(getQuery(req, res) [, success(profile, req, res, next), fail(result, req, res, next)] )
+返回一个用于根据查询条件获取第一个profile的async中间件。
+```javascript
+const findOneProfileByUserId = profileMiddlewares.findOne(
+  req => ({ userid: req.params.userid}),
+  (profile, req, res) => {
+    if (profile) {
+      res.send({ ret: 0, data: profile });
+    } else {
+      res.send({ ret: 404 });
+    }
+  });
+router.get('/find-by-userid/:userid', findOneProfileByUserId);
+```
+参数：
+- getQuery 必须的，一个函数，用于获取profile的查询条件。
+- success 获取profile之后的处理函数，默认为：
+```javascript
+(doc, req, res, next) => {
+  res.profile = doc;
+  next();
+}
+```
+- fail 失败之后的处理函数，默认为：
+```javascript
+(result, req, res) => {
+  res.send(result);
+}
+```
 ### How to Test
 
 Run one, or a combination of the following commands to lint and test your code:
