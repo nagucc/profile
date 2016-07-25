@@ -38,18 +38,24 @@ export default class MongoProfileMiddlewares {
       }
     };
   }
-  get(getId) {
+  get(getId,
+    success = (doc, req, res, next) => {
+      res.profile = doc;
+      next();
+    },
+    fail = (result, req, res) => {
+      res.send(result);
+    }) {
     return async (req, res, next) => {
       try {
         const _id = getId(req, res);
         const doc = await this.dao.get(_id);
-        res.profile = doc;
-        next();
+        success(doc, req, res, next);
       } catch (e) {
-        res.send({
+        fail({
           ret: SERVER_FAILED,
           msg: e,
-        });
+        }, req, res, next);
       }
     };
   }
