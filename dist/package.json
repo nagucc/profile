@@ -1,6 +1,6 @@
 {
   "name": "nagu-profile",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "",
   "repository": "",
   "author": "na57",
@@ -10,7 +10,7 @@
   "jsnext:main": "index.es6.js",
   "dependencies": {
     "babel-runtime": "^6.6.1",
-    "mongo-use-collection": "0.0.4",
+    "mongo-use-collection": "0.0.5",
     "nagu-validates": "0.0.3"
   }
 }
