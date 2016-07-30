@@ -4,7 +4,6 @@
  */
 
 import { useCollection } from 'mongo-use-collection';
-// import { mongoUrl } from '../../config';
 
 
 export default class Profle {

@@ -11,8 +11,6 @@
   _classCallCheck = 'default' in _classCallCheck ? _classCallCheck['default'] : _classCallCheck;
   _createClass = 'default' in _createClass ? _createClass['default'] : _createClass;
 
-  // import { mongoUrl } from '../../config';
-
   var Profle = function () {
     function Profle(url) {
       var collection = arguments.length <= 1 || arguments[1] === undefined ? 'profles' : arguments[1];

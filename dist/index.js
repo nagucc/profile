@@ -13,8 +13,6 @@ var _createClass = _interopDefault(require('babel-runtime/helpers/createClass'))
 var mongoUseCollection = require('mongo-use-collection');
 var naguValidates = require('nagu-validates');
 
-// import { mongoUrl } from '../../config';
-
 var Profle = function () {
   function Profle(url) {
     var collection = arguments.length <= 1 || arguments[1] === undefined ? 'profles' : arguments[1];

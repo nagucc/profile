@@ -7,8 +7,6 @@ import _createClass from 'babel-runtime/helpers/createClass';
 import { useCollection } from 'mongo-use-collection';
 import { SERVER_FAILED, OBJECT_IS_UNDEFINED_OR_NULL } from 'nagu-validates';
 
-// import { mongoUrl } from '../../config';
-
 var Profle = function () {
   function Profle(url) {
     var collection = arguments.length <= 1 || arguments[1] === undefined ? 'profles' : arguments[1];
