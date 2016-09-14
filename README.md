@@ -86,6 +86,32 @@ router.get('/find-by-userid/:userid', findOneProfileByUserId);
   res.send(result);
 }
 ```
+
+#### ProfileManager
+
+##### 引入对象，初始化
+```javascript
+import { ProfileManager } from 'nagu-profile';
+
+const mongoUrl = 'mongo://localhost/mydb';
+const manager = new ProfileManager(mongoUrl, 'profiles');
+```
+
+##### add
+添加profile
+
+```javascript
+const newProfile = {
+  userid: 'xxx',
+  name: 'XiaoMing',
+  otherProperty: 'otherValue',
+};
+const result = await manager.add(newProfile);
+```
+
+##### get(id)
+根据id获取用户数据
+
 ### How to Test
 
 Run one, or a combination of the following commands to lint and test your code:

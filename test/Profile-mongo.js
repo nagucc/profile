@@ -7,9 +7,9 @@ eslint-env mocha
 import { expect } from 'chai';
 import 'babel-polyfill';
 
-import Profile from '../src/Profile-mongo';
+import ProfileManager from '../src/Profile-mongo';
 const mongoUrl = 'mongodb://localhost/test';
-const dao = new Profile(mongoUrl);
+const dao = new ProfileManager(mongoUrl);
 
 describe('Profile Data Access', () => {
   const userid = Math.random();
@@ -22,7 +22,7 @@ describe('Profile Data Access', () => {
     expect(profile._id).to.be.ok;
   });
   it('findOne 正确查询', async () => {
-    const doc = await dao.findOne({ userid: userid });
+    const doc = await dao.findOne({ userid });
     expect(doc).to.eql(profile);
   });
   it('getByUserId 根据userid可获取数据', async () => {

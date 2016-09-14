@@ -9,4 +9,5 @@
 
 export Profile from './Profile-mongo.js';
 export MongoProfile from './Profile-mongo.js';
+export ProfileManager from './Profile-mongo.js';
 export MongoProfileMiddlewares from './mongo-express-middlewares';
