@@ -2,7 +2,7 @@
 eslint-disable no-param-reassign, no-underscore-dangle
  */
 import { SERVER_FAILED,
-  OBJECT_IS_UNDEFINED_OR_NULL } from 'nagu-validates';
+  OBJECT_IS_UNDEFINED_OR_NULL, OBJECT_IS_NOT_FOUND, REQUIRED } from 'nagu-validates';
 
 import { Profile } from './index';
 
@@ -106,6 +106,80 @@ export default class MongoProfileMiddlewares {
           msg: e,
         });
       }
+    };
+  }
+
+// 判断当前用户是否是指定profile的所有者
+  isOwner(
+    getId = () => null,
+    getCurrentUserId = () => null,
+    success = (result, req, res, next) => next(),
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      try {
+        const id = getId(req, res);
+        // 确保profile.id不为空
+        if (!id) {
+          fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: 'profile的Id不能为空' }, req, res, next);
+          return;
+        }
+        const data = await this.dao.get(id);
+        // 确保id正确，能取到数据
+        if (!data) {
+          fail({ ret: OBJECT_IS_NOT_FOUND, msg: '对象不存在' }, req, res, next);
+          return;
+        }
+        const userid = getCurrentUserId(req, res, next);
+        success(userid === data.userid, req, res, next);
+      } catch (e) {
+        fail({
+          ret: SERVER_FAILED,
+          msg: e,
+        }, req, res, next);
+      }
+    };
+  }
+
+  isManager(
+    getCurrentUserId = () => null,
+    managerGroupId,
+    success = (result, req, res, next) => next(),
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!managerGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的MangerGroupId' }, req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let result = false;
+      if (profile.roles && profile.roles.length) {
+        result = profile.roles.some(role => role === managerGroupId);
+      }
+      success(result, req, res, next);
+    };
+  }
+
+  isSupervisor(
+    getCurrentUserId = () => null,
+    supervisorGroupId,
+    success = (result, req, res, next) => next(),
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!supervisorGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的SupervisorGroupId' }, req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let result = false;
+      if (profile.roles && profile.roles.length) {
+        result = profile.roles.some(role => role === supervisorGroupId);
+      }
+      success(result, req, res, next);
     };
   }
 }
