@@ -16,39 +16,50 @@ export default class MongoProfileMiddlewares {
   /*
   添加Profile
    */
-  add(composeProfile) {
+  add(
+    // 定义获取profile数据的方法，默认取req.body的全部数据
+    composeProfile = req => req.body,
+    // 定义操作成功之后的动作，默认继续指向下一个中间件。
+    success = (profile, req, res, next) => next(),
+    // 定义操作失败之后的动作，默认为输出
+    fail = (err, req, res) => res.send(err),
+  ) {
     return async (req, res, next) => {
       try {
         const profile = composeProfile(req, res);
         if (!profile.name) {
-          res.send({
+          fail({
             ret: OBJECT_IS_UNDEFINED_OR_NULL,
             msg: '姓名不能为空',
-          });
+          }, req, res, next);
           return;
         }
         const result = await this.dao.add(profile);
-        req.body._id = result.insertedId;
-        next();
+        success({ _id: result.insertedId, ...profile }, req, res, next);
       } catch (e) {
-        res.send({
+        fail({
           ret: SERVER_FAILED,
           msg: e,
-        });
+        }, req, res, next);
       }
     };
   }
-  get(getId,
-    success = (doc, req, res, next) => {
-      res.profile = doc;
-      next();
-    },
-    fail = (result, req, res) => {
-      res.send(result);
-    }) {
+  // 根据Id获取profile
+  get(
+    // 定义获取Id的方法，默认取url中的id参数
+    getId = req => req.params.id,
+    // 定义操作成功之后的动作，默认继续指向下一个中间件。
+    success = (doc, req, res, next) => next(),
+    // 定义操作失败之后的动作，默认为输出
+    fail = (result, req, res) => res.send(result),
+  ) {
     return async (req, res, next) => {
       try {
         const _id = getId(req, res);
+        if (!_id) {
+          fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: '必须指定id' }, req, res, next);
+          return;
+        }
         const doc = await this.dao.get(_id);
         success(doc, req, res, next);
       } catch (e) {
