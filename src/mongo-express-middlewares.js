@@ -71,32 +71,50 @@ export default class MongoProfileMiddlewares {
     };
   }
 
-  findOne(getQuery, success = (doc, req, res, next) => {
-    res.profile = doc;
-    next();
-  }, fail = (result, req, res) => {
-    res.send(result);
-  }) {
+  findOne(
+    getQuery = () => null,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
     return async (req, res, next) => {
       try {
         const query = getQuery(req, res);
+        if (!query) {
+          fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: '必须提供query' }, req, res, next);
+          return;
+        }
         const doc = await this.dao.findOne(query);
         success(doc, req, res, next);
       } catch (e) {
-        fail({
-          ret: SERVER_FAILED,
-          msg: e,
-        }, req, res, next);
+        fail({ ret: SERVER_FAILED, msg: e }, req, res, next);
       }
     };
   }
-  update(getId, composeProfile) {
+  update(
+    getId = () => null,
+    composeProfile = () => null,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
     return async (req, res, next) => {
       const _id = getId(req, res);
+      // 确保profile.id不为空
+      if (!_id) {
+        fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: 'profile的Id不能为空' }, req, res, next);
+        return;
+      }
       const profile = composeProfile(req, res);
+      if (!profile) {
+        fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: '更新数据不能为空' }, req, res, next);
+        return;
+      }
       try {
         await this.dao.update(_id, profile);
-        next();
+        success({ _id, ...profile }, req, res, next);
       } catch (e) {
         res.send({
           ret: SERVER_FAILED,
@@ -105,26 +123,33 @@ export default class MongoProfileMiddlewares {
       }
     };
   }
-  remove(getId) {
+  remove(
+    getId = () => null,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
     return async (req, res, next) => {
-      const _id = getId(req, res);
       try {
-        await this.dao.remove(_id);
-        next();
+        const _id = getId(req, res);
+        const result = await this.dao.remove(_id);
+        success(result, req, res, next);
       } catch (e) {
-        res.send({
-          ret: SERVER_FAILED,
-          msg: e,
-        });
+        fail({ ret: SERVER_FAILED, msg: e }, req, res, next);
       }
     };
   }
 
 // 判断当前用户是否是指定profile的所有者
   isOwner(
+    // 定义获取ProfileId的方法，默认返回null
     getId = () => null,
+    // 定义获取当前UserId的方法，默认返回null
     getCurrentUserId = () => null,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
     success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
     fail = (err, req, res) => res.send(err),
   ) {
     return async (req, res, next) => {
@@ -153,9 +178,13 @@ export default class MongoProfileMiddlewares {
   }
 
   isManager(
+    // 定义获取当前UserId的方法，默认返回null
     getCurrentUserId = () => null,
+    // 管理组Id
     managerGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
     success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
     fail = (err, req, res) => res.send(err),
   ) {
     return async (req, res, next) => {
@@ -174,9 +203,13 @@ export default class MongoProfileMiddlewares {
   }
 
   isSupervisor(
+    // 定义获取当前UserId的方法，默认返回null
     getCurrentUserId = () => null,
+    // Superviso组Id
     supervisorGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
     success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
     fail = (err, req, res) => res.send(err),
   ) {
     return async (req, res, next) => {
@@ -191,6 +224,171 @@ export default class MongoProfileMiddlewares {
         result = profile.roles.some(role => role === supervisorGroupId);
       }
       success(result, req, res, next);
+    };
+  }
+
+  isOwnerOrSupervisor(
+    // 定义获取ProfileId的方法，默认返回null
+    getId = () => null,
+    // 定义获取当前UserId的方法，默认返回null
+    getCurrentUserId = () => null,
+    // Superviso组Id
+    supervisorGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!supervisorGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的SupervisorGroupId' }, req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let result = false;
+      if (profile && profile.roles && profile.roles.length) {
+        result = profile.roles.some(role => role === supervisorGroupId);
+      }
+      if (result) {
+        success(result, req, res, next);
+        return;
+      }
+      const id = getId(req, res);
+      // 确保profile.id不为空
+      if (!id) {
+        fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: 'profile的Id不能为空' }, req, res, next);
+        return;
+      }
+      const data = await this.dao.get(id);
+      // 确保id正确，能取到数据
+      if (!data) {
+        fail({ ret: OBJECT_IS_NOT_FOUND, msg: '对象不存在' }, req, res, next);
+        return;
+      }
+      success(userid === data.userid, req, res, next);
+    };
+  }
+
+  isOwnerOrManager(
+    // 定义获取ProfileId的方法，默认返回null
+    getId = () => null,
+    // 定义获取当前UserId的方法，默认返回null
+    getCurrentUserId = () => null,
+    // Manager组Id
+    managerGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!managerGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的MangerGroupId' }, req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let result = false;
+      if (profile && profile.roles && profile.roles.length) {
+        result = profile.roles.some(role => role === managerGroupId);
+      }
+      if (result) {
+        success(result, req, res, next);
+        return;
+      }
+      const id = getId(req, res);
+      // 确保profile.id不为空
+      if (!id) {
+        fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: 'profile的Id不能为空' }, req, res, next);
+        return;
+      }
+      const data = await this.dao.get(id);
+      // 确保id正确，能取到数据
+      if (!data) {
+        fail({ ret: OBJECT_IS_NOT_FOUND, msg: '对象不存在' }, req, res, next);
+        return;
+      }
+      success(userid === data.userid, req, res, next);
+    };
+  }
+
+  isSupervisorOrManager(
+    // 定义获取当前UserId的方法，默认返回null
+    getCurrentUserId = () => null,
+    // Manager组Id
+    managerGroupId,
+    // Supervisor组Id,
+    supervisorGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!managerGroupId || !supervisorGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的MangerGroupId或SupervisorGroupId' },
+          req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let isSupervisor = false;
+      let isManager = false;
+      if (profile && profile.roles && profile.roles.length) {
+        isManager = profile.roles.some(role => role === managerGroupId);
+        isSupervisor = profile.roles.some(role => role === supervisorGroupId);
+      }
+      success(isSupervisor || isManager, req, res, next);
+    };
+  }
+
+  isOwnerOrSupervisorOrManager(
+    // 定义获取ProfileId的方法，默认返回null
+    getId = () => null,
+    // 定义获取当前UserId的方法，默认返回null
+    getCurrentUserId = () => null,
+    // Manager组Id
+    managerGroupId,
+    // Supervisor组Id
+    supervisorGroupId,
+    // 定义判断结果如何操作的方法，默认执行下一个中间件
+    success = (result, req, res, next) => next(),
+    // 定义错误处理方法，默认输出错误到客户端
+    fail = (err, req, res) => res.send(err),
+  ) {
+    return async (req, res, next) => {
+      if (!managerGroupId || !supervisorGroupId) {
+        fail({ ret: REQUIRED, msg: '必须提供正确的MangerGroupId或SupervisorGroupId' },
+          req, res, next);
+        return;
+      }
+      const userid = getCurrentUserId(req, res);
+      const profile = await this.dao.getByUserId(userid);
+      let isSupervisor = false;
+      let isManager = false;
+      if (profile && profile.roles && profile.roles.length) {
+        isManager = profile.roles.some(role => role === managerGroupId);
+        isSupervisor = profile.roles.some(role => role === supervisorGroupId);
+      }
+      const result = isSupervisor || isManager;
+      if (result) {
+        success(result, req, res, next);
+        return;
+      }
+      const id = getId(req, res);
+      // 确保profile.id不为空
+      if (!id) {
+        fail({ ret: OBJECT_IS_UNDEFINED_OR_NULL, msg: 'profile的Id不能为空' }, req, res, next);
+        return;
+      }
+      const data = await this.dao.get(id);
+      // 确保id正确，能取到数据
+      if (!data) {
+        fail({ ret: OBJECT_IS_NOT_FOUND, msg: '对象不存在' }, req, res, next);
+        return;
+      }
+      success(userid === data.userid, req, res, next);
     };
   }
 }
