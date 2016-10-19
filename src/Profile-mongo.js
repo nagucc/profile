@@ -3,7 +3,7 @@
 字段包括：_id, userid, roles, name, isMale, phone
  */
 
-import { useCollection } from 'mongo-use-collection';
+import { useCollection } from 'mongo-use-collection'; // eslint-disable-line
 
 
 export default class Profle {
@@ -58,7 +58,7 @@ export default class Profle {
         }
       }));
   }
-  update(_id, profile = {}) {
+  updateById(_id, profile = {}, options) {
     return new Promise((resolve, reject) =>
       this.useProfiles(async col => {
         try {
@@ -67,7 +67,7 @@ export default class Profle {
             ...oldDoc,
             ...profile,
           };
-          await col.updateOne({ _id }, { $set: doc });
+          await col.updateOne({ _id }, { $set: doc }, options);
           resolve(doc);
         } catch (e) {
           reject(e);

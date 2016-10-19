@@ -132,20 +132,23 @@ describe('Profile Middlewares', () => {
       });
 
      // 正确判断
-      [{
+      [{  // 当前用户不是管理员
+        currentUserId: Math.random(),
         groupId: 1,
-        result: 'true',
+        result: 'false',
       }, {
+        currentUserId: rawProfile.userid,
         groupId: 3,
         result: 'true',
       }, {
+        currentUserId: rawProfile.userid,
         groupId: 4,
         result: 'false',
       }].map(item => it(`正确判断，结果：${item.result}`, async () => {
         const req = createRequest();
         const res = createResponse();
         await dao.isManager(
-          () => rawProfile.userid,
+          () => item.currentUserId,
           item.groupId,
           sendResult,
         )(req, res);

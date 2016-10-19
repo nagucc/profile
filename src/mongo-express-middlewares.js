@@ -113,7 +113,7 @@ export default class MongoProfileMiddlewares {
         return;
       }
       try {
-        await this.dao.update(_id, profile);
+        await this.dao.updateById(_id, profile);
         success({ _id, ...profile }, req, res, next);
       } catch (e) {
         res.send({
@@ -195,7 +195,7 @@ export default class MongoProfileMiddlewares {
       const userid = getCurrentUserId(req, res);
       const profile = await this.dao.getByUserId(userid);
       let result = false;
-      if (profile.roles && profile.roles.length) {
+      if (profile && profile.roles && profile.roles.length) {
         result = profile.roles.some(role => role === managerGroupId);
       }
       success(result, req, res, next);

@@ -32,7 +32,7 @@ describe('Profile Data Access', () => {
   it('update 正确更新, get 正确取到数据', async () => {
     const updated = { ...profile, roles: [3] };
     const { _id, ...rest } = updated;
-    await dao.update(_id, rest);
+    await dao.updateById(_id, rest);
     const result = await dao.get(_id);
     expect(result).to.eql(updated);
   });
