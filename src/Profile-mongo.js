@@ -67,7 +67,7 @@ export default class Profle {
             ...oldDoc,
             ...profile,
           };
-          delete doc._id;
+          delete doc._id; // eslint-disable-line no-underscore-dangle
           await col.updateOne({ _id }, { $set: doc }, options);
           resolve(doc);
         } catch (e) {
