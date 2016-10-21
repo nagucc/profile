@@ -67,6 +67,7 @@ export default class Profle {
             ...oldDoc,
             ...profile,
           };
+          delete doc._id;
           await col.updateOne({ _id }, { $set: doc }, options);
           resolve(doc);
         } catch (e) {
